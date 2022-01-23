@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="io.erp.modules.erp.dao.ErpShopTypeDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="io.erp.modules.erp.entity.ErpShopTypeEntity" id="erpShopTypeMap">
+        <result property="id" column="id"/>
+        <result property="shopid" column="shopid"/>
+        <result property="typeid" column="typeid"/>
+    </resultMap>
+
+    <select id="queryTypeIds" resultType="java.lang.Integer">
+        select typeid from erp_shop_type where shopid = #{shopId}
+    </select>
+
+    <delete id="deleteTypeIds">
+        delete from erp_shop_type where shopid = #{shopId}
+    </delete>
+</mapper>

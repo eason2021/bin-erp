@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="io.erp.modules.erp.dao.ErpTypeDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="io.erp.modules.erp.entity.ErpTypeEntity" id="erpTypeMap">
+        <result property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="status" column="status"/>
+    </resultMap>
+
+    <select id="queryPage" resultType="io.erp.modules.erp.entity.ErpTypeEntity">
+        select t1.*,count(t2.shopid) as shopCount,
+        ifnull((select count(1) from erp_goods a inner join erp_goods_type b on a.id = b.goodsid where b.typeid = t1.id group by b.typeid),0) as goodsCount
+        from erp_type t1 left join erp_shop_type t2 on t1.id = t2.typeid
+        <where>
+            <if test="name != null and name != ''">
+                and t1.name like '%${name}%'
+            </if>
+            <if test="code != null and code != ''">
+                and t1.code like '%${code}%'
+            </if>
+        </where>
+        group by t1.id order by goodsCount desc
+    </select>
+
+    <select id="queryList" resultMap="erpTypeMap">
+        select * from erp_type
+    </select>
+
+    <select id="queryListByShopId" resultMap="erpTypeMap">
+        select t1.* from erp_type t1 inner join erp_shop_type t2 on t1.id = t2.typeid where t2.shopid = #{shopId}
+    </select>
+
+</mapper>

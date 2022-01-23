@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+		<#include "/header.html">
+    <link rel="stylesheet" type="text/css" href="${request.contextPath}/statics/plugins/layui/css/layui.css">
+    <script src="${request.contextPath}/statics/plugins/layui/layui.js" charset="utf-8"></script>
+</head>
+<body>
+<div id="rrapp" v-cloak>
+    <div v-show="showList">
+        <div class="grid-btn">
+            <div class="form-group col-sm-2">
+                <input type="text" class="form-control" v-model="q.title" @keyup.enter="query" placeholder="标题">
+            </div>
+            <div class="form-group col-sm-1">
+                <input type="text" class="form-control" v-model="q.code" @keyup.enter="query" placeholder="编号">
+            </div>
+            <div class="form-group col-sm-2">
+                <select class="form-control" v-model="q.shopid">
+                    <option value="">请选择店铺</option>
+                    <option :value="shop.id" v-for="shop in shops">{{shop.code}}-{{shop.title}}</option>
+                </select>
+            </div>
+            <div class="form-group col-sm-2">
+                <select class="form-control" v-model="q.typeid">
+                    <option value="">请选择分类</option>
+                    <option :value="type.id" v-for="type in types">{{type.code}}-{{type.name}}</option>
+                </select>
+            </div>
+            <a class="btn btn-default" @click="query">查询</a>
+            <#if shiro.hasPermission("erp:erpgoods:save")>
+            <a class="btn btn-primary" @click="add"><i class="fa fa-plus"></i>&nbsp;新增</a>
+            </#if>
+            <#if shiro.hasPermission("erp:erpgoods:update")>
+            <a class="btn btn-primary" @click="update"><i class="fa fa-pencil-square-o"></i>&nbsp;修改</a>
+            </#if>
+            <#if shiro.hasPermission("erp:erpgoods:delete")>
+            <a class="btn btn-primary" @click="del"><i class="fa fa-trash-o"></i>&nbsp;删除</a>
+            </#if>
+        </div>
+        <table id="jqGrid"></table>
+        <div id="jqGridPager"></div>
+    </div>
+
+    <div v-show="!showList" class="panel panel-default">
+        <div class="panel-heading">{{title}}</div>
+        <form class="form-horizontal">
+											                    <div class="form-group">
+                        <div class="col-sm-2 control-label">标题</div>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" v-model="erpGoods.title" placeholder="标题"/>
+                        </div>
+                    </div>
+											                    <div class="form-group">
+                        <div class="col-sm-2 control-label">链接</div>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" v-model="erpGoods.url" placeholder="链接"/>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="col-sm-2 control-label">店铺</div>
+                        <div class="col-sm-10">
+                            <select class="form-control" v-model="erpGoods.shopid" @change="getGoodTypes()">
+                                <option value="">请选择店铺</option>
+                                <option :value="shop.id" v-for="shop in shops">{{shop.code}}-{{shop.title}}</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="col-sm-2 control-label">商品分类</div>
+                        <div style="width: 800px;">
+                            <div id="goodtype" class="demo-transfer"></div>
+                        </div>
+                    </div>
+											                    <div class="form-group">
+                        <div class="col-sm-2 control-label">产品编号</div>
+                        <div class="col-sm-10">
+                            <div style="display: inline-block">
+                                <input type="text" class="form-control" v-model="erpGoods.code" placeholder="产品编号"/>
+                            </div>
+                            <div style="display: inline-block">
+                                <a class="btn btn-default" @click="generateCode" v-if="erpGoods.shopid">生成编号</a>
+                            </div>
+                        </div>
+                    </div>
+											                    <div class="form-group">
+                        <div class="col-sm-2 control-label">图片</div>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" v-model="erpGoods.imgs" placeholder="图片"/>
+                        </div>
+                    </div>
+											                    <div class="form-group">
+                        <div class="col-sm-2 control-label">起批量</div>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" v-model="erpGoods.minBuy" placeholder="起批量"/>
+                        </div>
+                    </div>
+											                    <div class="form-group">
+                        <div class="col-sm-2 control-label">进货价</div>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" v-model="erpGoods.price" placeholder="进货价"/>
+                        </div>
+                    </div>
+											                    <div class="form-group">
+                        <div class="col-sm-2 control-label">快递费</div>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" v-model="erpGoods.courierFee" placeholder="快递费"/>
+                        </div>
+                    </div>
+											                    <div class="form-group">
+                        <div class="col-sm-2 control-label">发货时间</div>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" v-model="erpGoods.deliveryTime" placeholder="发货时间"/>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="col-sm-2 control-label">状态</div>
+                        <label class="radio-inline">
+                            <input type="radio" name="status" value="0" v-model="erpGoods.status"/> 禁用
+                        </label>
+                        <label class="radio-inline">
+                            <input type="radio" name="status" value="1" v-model="erpGoods.status"/> 正常
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-sm-2 control-label">采集上线状态</div>
+                        <label class="radio-inline">
+                            <input type="radio" name="collectionStatus" value="0" v-model="erpGoods.collectionStatus"/> 未采集
+                        </label>
+                        <label class="radio-inline">
+                            <input type="radio" name="collectionStatus" value="1" v-model="erpGoods.collectionStatus"/> 采集未上线
+                        </label>
+                        <label class="radio-inline">
+                            <input type="radio" name="collectionStatus" value="2" v-model="erpGoods.collectionStatus"/> 已上线
+                        </label>
+                    </div>
+							            <div class="form-group">
+                <div class="col-sm-2 control-label"></div>
+                <input type="button" class="btn btn-primary" id="btnSaveOrUpdate" data-loading-text="保存中..." @click="saveOrUpdate" value="确定"/>
+                &nbsp;&nbsp;<input type="button" class="btn btn-warning" @click="reload" value="返回"/>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="${request.contextPath}/statics/js/modules/erp/erpgoods.js?_${.now?long}"></script>
+</body>
+</html>

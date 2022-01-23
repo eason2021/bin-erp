@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="io.erp.modules.erp.dao.ErpShopDao">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="io.erp.modules.erp.entity.ErpShopEntity" id="erpShopMap">
+        <result property="id" column="id"/>
+        <result property="title" column="title"/>
+        <result property="url" column="url"/>
+        <result property="remark" column="remark"/>
+        <result property="status" column="status"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <select id="queryPage" resultType="io.erp.modules.erp.entity.ErpShopEntity">
+        select t1.*,group_concat(t3.name separator '|') as typenames,count(t3.name) as typecount,
+        ifnull((select count(1) from erp_goods a inner join erp_shop b on a.shopid = b.id where b.id = t1.id group by b.id),0) as goodsCount
+        from erp_shop t1 left join erp_shop_type t2 on t1.id = t2.shopid
+            left join erp_type t3 on t2.typeid = t3.id
+        <where>
+            <if test="title != null and title != ''">
+                and t1.title like '%${title}%'
+            </if>
+            <if test="code != null and code != ''">
+                and t1.code like '%${code}%'
+            </if>
+        </where>
+        group by t1.id
+        order by goodsCount desc
+    </select>
+
+    <select id="queryAll" resultMap="erpShopMap">
+        select * from erp_shop where status = '1' order by create_time desc
+    </select>
+</mapper>
